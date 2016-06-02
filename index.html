@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Quan&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="sjtuer, zjuer">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Quan's Blog">
+<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:site_name" content="Quan's Blog">
+<meta property="og:description" content="sjtuer, zjuer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Quan's Blog">
+<meta name="twitter:description" content="sjtuer, zjuer">
+  
+    <link rel="alternate" href="/atom.xml" title="Quan&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Quan&#39;s Blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-浅谈队列在移动开发中的应用" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/05/29/浅谈队列在移动开发中的应用/" class="article-date">
+  <time datetime="2016-05-29T07:16:57.000Z" itemprop="datePublished">2016-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/05/29/浅谈队列在移动开发中的应用/">浅谈队列在移动开发中的应用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>恰当的数据结构，能让代码产生质的飞跃。本篇总结下在开发中对<b>‘队列’</b>的一点体会。</p>
+<h4>有限资源的访问</h4>
+
+<p>先进先出（FIFO）是队列的本质属性，所以当遇到这样的需求时，比如实现一个FIFO的cache，那么使用队列自然不需要太多思考。</p>
+<p>本篇主要总结下在App中使用队列来控制对‘有限的资源’的访问。</p>
+<p>队列在iOS框架中随处可见，比如主线程的runloop会把所有等待处理的Event放在队列里，GCD的serial queue本身就是一个队列，还有NSOperationQueue等。这些例子中有一个共同的模式，就是对一个有限资源的使用，runloop是资源，线程是资源。</p>
+<p>而在多线程编程中，我们常常使用锁来控制对资源的访问。从某种角度来看，锁也是操作系统提供的存放访问线程的队列。如果让我来实现一个锁的话，我也会使用队列来存放等待线程的信息。</p>
+<p>道理很简单，更多的时候需要思考的是：什么是有限的资源，什么是资源的访问者。</p>
+<p>举一个例子：在iOS中，弹窗（alert view）最多只能显示一个，比如定位城市更新、订单状态改变等。于是我们使用了队列来控制对弹窗的使用(swift伪代码，省略了一些细节)：</p>
+<pre><code>public class WindowManager {
+    private var _queue: Queue<(String, String)>
+    private var isShowing: Bool
+
+    public func show(title: String, message: String) {
+        onMainQueue {
+            if isShowing {
+                _queue.enqueue((title, message))
+            } else {
+                showInternal(title, message)
+            }
+        }
+    }
+
+    public func dismiss() {
+        onMainQueue {
+            dismissInternal()
+            // schedule pending windows
+            if _queue is not empty {
+                let (title, message) = _queue.dequeue()
+                showInternal(title, message)
+            }
+        }
+    }
+
+    private func showInternal(title: String, message: String) {
+        isShowing = true
+        showAlertView()
+    }
+
+    private func dismissInternal() {
+        isShowing = false
+        dismissAlertView()
+    }
+
+    // execute block on main queue
+    private func onMainQueue(block: () -> Void) {
+        if NSThread.isMainThread() {
+            block()
+        } else {
+            dispatch_async(dispatch_get_main_queue(), block)
+        }
+    }
+}
+</code></pre>
+
+<p>后来需求变复杂了些，比如当前在登录界面时，弹窗需要等登录界面退出再显示。<br>
+        
+          <p class="article-more-link">
+            <a href="/2016/05/29/浅谈队列在移动开发中的应用/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/05/29/浅谈队列在移动开发中的应用/" data-id="cioy0t3k50002o59jn90utkzw" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-自动状态机" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/04/15/自动状态机/" class="article-date">
+  <time datetime="2015-04-15T04:01:09.000Z" itemprop="datePublished">2015-04-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/04/15/自动状态机/">自动状态机</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>自动状态机是一项非常实用的编程技巧，可以解决一些复杂的逻辑问题，通常来说如果一个系统有多种状态，不同状态之间的切换逻辑不尽相同，那么就可以考虑使用状态机。比如提取字符串的token，网络协议的处理，复杂界面等。</p>
+<p>对于状态机的基本定义，在此就不赘述了，可以自行翻阅<a href="http://en.wikipedia.org/wiki/Finite-state_machine">Wiki</a>.</p>
+<p>实现一个自动状态机不是一件很难的事，主要的工作还是在于将实际问题转映射成状态机模型。至于具体的实现方法，有几种固定的模式可循：</p>
+        
+          <p class="article-more-link">
+            <a href="/2015/04/15/自动状态机/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/04/15/自动状态机/" data-id="cioy0t3k80004o59jvmxnw3gi" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Wordle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/02/11/Wordle/" class="article-date">
+  <time datetime="2015-02-11T15:52:28.000Z" itemprop="datePublished">2015-02-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/02/11/Wordle/">Wordle</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>记录下自己业余时间在做的一个小项目，这个项目的名字叫PageWordle，可以将网络页面上的文本信息用词云的可视化形式展现，出现频率高的词语将以更大的字体展现，其主要用意是让我们在阅读文章之前可以知道这边文章中的主要概念，再决定要不要继续阅读。</p>
+<p><img src="http://7u2l8d.com1.z0.glb.clouddn.com/demo.png" alt="demo" width="400px" /></p>
+<p>主要流程包括：</p>
+        
+          <p class="article-more-link">
+            <a href="/2015/02/11/Wordle/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/02/11/Wordle/" data-id="cioy0t3jx0000o59j9477zcq6" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-浅谈MVC" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/12/浅谈MVC/" class="article-date">
+  <time datetime="2015-01-12T12:50:05.000Z" itemprop="datePublished">2015-01-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/12/浅谈MVC/">浅谈MVC</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>MVC（Model View Controller）也被很多人称作Massive View Controller，其原因在于Controller要接纳很多既不属于View，也不属于Model的东西，导致其十分臃肿。而代码一旦变得臃肿，问题就接踵而至，比如难以测试，容易出Bug等等。那么怎样能使Controller不那么臃肿呢，下面就谈一点自己在实际开发中的体会。</p>
+<h4>View Model</h4>
+
+<p>在MVC框架中，Model里面的数据通常需要经过一些处理之后才会在View中展示，比如Model里面的String可能要经过一些格式转换等等操作之后，才可以交给View去展示。这些转换之后的数据不能放在View里面，因为这违背View本身的定义，同时这些数据也不属于Model，那么只能将他们放在Controller里了。</p>
+<p>为了将这部分数据从Controller解耦，我们可以在Controller和Model之间添加一层，称之为View Model，如下图：</p>
+<p><img src="http://www.objc.io/images/issue-13/mvvm.png" alt="MVVM"></p>
+<p>View Model的概念是从MVVM里面来的，大家可以查看<a href="http://www.objc.io/issue-13/mvvm.html">这篇文章</a>做更多的了解。</p>
+<p>我们在一个项目中使用了这种结构，项目的需求大致是这样子的：<br>
+        
+          <p class="article-more-link">
+            <a href="/2015/01/12/浅谈MVC/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/01/12/浅谈MVC/" data-id="cioy0t3k70003o59j9trci0n6" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-开篇" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/08/开篇/" class="article-date">
+  <time datetime="2015-01-08T11:18:45.000Z" itemprop="datePublished">2015-01-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/08/开篇/">开篇</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>2015年决定开始写博客，一来可以锻炼写文档的能力，二来能帮助自己积累技术，督促自己更努力的学习。</p>
+<p>作为开篇，分享下自己学习iOS的一些网站和资源吧。</p>
+<ol>
+<li><p>首先当然是苹果的官方文档和WWDC视频，这个就不多说了。</p>
+</li>
+<li><p><a href="http://www.cocoachina.com/swift/" target="_blank" rel="external">Cocoa China</a>, 想必做iOS开发的人应该都很熟悉这个网站，内容很广泛，而且经常会翻译一些优秀的英文博文，建议有时间的话可以每天都去浏览有没有新的内容。          </p>
+</li>
+<li><p><a href="http://www.objc.io/" target="_blank" rel="external">objc.io</a>, 这是一个期刊形式的博客，每个月发布一次，每次的内容就集中在某个Topic，内容比较有深度，对iOS技能的提高很有帮助。有中文版的网站:<a href="http://www.objccn.io/" target="_blank" rel="external">http://www.objccn.io/</a>.</p>
+</li>
+<li><p><a href="https://github.com/trending" target="_blank" rel="external">Github Trending</a>, 时常翻阅Github的热门，看别人写的优秀代码，学习别人的软件架构，进步可以非常快。另外也可以跟上最新的技术潮流，这对程序员来说重要性不言而喻。</p>
+</li>
+<li><p><a href="http://nshipster.com" target="_blank" rel="external">NSHipster</a>, 关注一些被忽略的Objective－C、Swift、Cocoa特性，每周都会跟新。写文章的是一些比较活跃的开源开发者，包括AFNetworking的创建者Mattt Thompson。这个网站也有对应的中文网站:<a href="http://nshipster.cn/" target="_blank" rel="external">http://nshipster.cn/</a>.</p>
+</li>
+<li><p><a href="http://blog.csdn.net/yiyaaixuexi/" target="_blank" rel="external">念茜的博客</a>, 这是一个非常优秀的关于iOS安全知识的博客，作者是支付宝的iOS安全工程师。对iOS逆向工程感兴趣的同学可以仔细翻阅她的iOS安全攻防系列博文。另外推荐一本关于iOS逆向工程的书，《iOS应用逆向工程:分析与实战》。</p>
+</li>
+<li><p><a href="http://v.163.com/special/opencourse/ios7.html" target="_blank" rel="external">斯坦福大学的iOS教程</a>, 非常适合iOS初学者，这也是公司里新人培训的教程。</p>
+</li>
+<li><p>有很多书也是非常不错的，比如《Effective Objective-C 2.0》，《Objective-C高级编程：iOS与OS X多线程和内存管理》等，不过移动领域技术更新比较快，书籍相对滞后，可以作为补充型的学习方式(现在网络上已经到处是Swift了，却很少看到Swift的好书)。</p>
+</li>
+</ol>
+<p>软件开发离不开实践，所以不停的锻炼写代码是提升的必要途径，简言之，学习，实践＋总结，持之以恒，你一定可以走的很远。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/01/08/开篇/" data-id="cioy0t3k20001o59j9al3ygk6" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/04/">April 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/05/29/浅谈队列在移动开发中的应用/">浅谈队列在移动开发中的应用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/04/15/自动状态机/">自动状态机</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/11/Wordle/">Wordle</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/12/浅谈MVC/">浅谈MVC</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/开篇/">开篇</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Quan Xiaosha<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

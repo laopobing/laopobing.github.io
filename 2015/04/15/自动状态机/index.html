@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>自动状态机 | Quan&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="自动状态机是一项非常实用的编程技巧，可以解决一些复杂的逻辑问题，通常来说如果一个系统有多种状态，不同状态之间的切换逻辑不尽相同，那么就可以考虑使用状态机。比如提取字符串的token，网络协议的处理，复杂界面等。
+对于状态机的基本定义，在此就不赘述了，可以自行翻阅Wiki.
+实现一个自动状态机不是一件很难的事，主要的工作还是在于将实际问题转映射成状态机模型。至于具体的实现方法，有几种固定的模式可循：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自动状态机">
+<meta property="og:url" content="http://yoursite.com/2015/04/15/自动状态机/index.html">
+<meta property="og:site_name" content="Quan's Blog">
+<meta property="og:description" content="自动状态机是一项非常实用的编程技巧，可以解决一些复杂的逻辑问题，通常来说如果一个系统有多种状态，不同状态之间的切换逻辑不尽相同，那么就可以考虑使用状态机。比如提取字符串的token，网络协议的处理，复杂界面等。
+对于状态机的基本定义，在此就不赘述了，可以自行翻阅Wiki.
+实现一个自动状态机不是一件很难的事，主要的工作还是在于将实际问题转映射成状态机模型。至于具体的实现方法，有几种固定的模式可循：">
+<meta property="og:image" content="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-input.png">
+<meta property="og:image" content="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-state.png">
+<meta property="og:image" content="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-function.png">
+<meta property="og:updated_time" content="2016-06-02T07:55:40.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="自动状态机">
+<meta name="twitter:description" content="自动状态机是一项非常实用的编程技巧，可以解决一些复杂的逻辑问题，通常来说如果一个系统有多种状态，不同状态之间的切换逻辑不尽相同，那么就可以考虑使用状态机。比如提取字符串的token，网络协议的处理，复杂界面等。
+对于状态机的基本定义，在此就不赘述了，可以自行翻阅Wiki.
+实现一个自动状态机不是一件很难的事，主要的工作还是在于将实际问题转映射成状态机模型。至于具体的实现方法，有几种固定的模式可循：">
+<meta name="twitter:image" content="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-input.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Quan&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Quan&#39;s Blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-自动状态机" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/04/15/自动状态机/" class="article-date">
+  <time datetime="2015-04-15T04:01:09.000Z" itemprop="datePublished">2015-04-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      自动状态机
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>自动状态机是一项非常实用的编程技巧，可以解决一些复杂的逻辑问题，通常来说如果一个系统有多种状态，不同状态之间的切换逻辑不尽相同，那么就可以考虑使用状态机。比如提取字符串的token，网络协议的处理，复杂界面等。</p>
+<p>对于状态机的基本定义，在此就不赘述了，可以自行翻阅<a href="http://en.wikipedia.org/wiki/Finite-state_machine" target="_blank" rel="external">Wiki</a>.</p>
+<p>实现一个自动状态机不是一件很难的事，主要的工作还是在于将实际问题转映射成状态机模型。至于具体的实现方法，有几种固定的模式可循：</p>
+<a id="more"></a>
+<h4>使用switch语句</h4>
+
+<p>最直接也是最简单的方法，代码写起来就是这个样子:</p>
+<pre><code>switch state:
+    case state1:
+        state = newState(inputData)
+        doAction(state1, state)
+        break;
+
+    case state2:
+        ...
+        break;
+
+    default:
+        ...
+        break;
+</code></pre><h4>Table Driven的方式</h4>
+
+<p>switch语句的实现方式不太容易维护，如果要扩展状态机就需要修改比较多的地方，容易导致Bug。如果把一些切换逻辑存在一个table（二维数组）里面，那么代码看起来就会简洁很多，而且扩展相对容易。从目前遇到的实际情况来说，有两个地方可以使用table:</p>
+<ul>
+<li>记录状态切换的表, 简称为state_table。如下面的例表中，X轴为输入（比如字符‘A’－‘Z’），Y轴为状态，表中的一项（x，y）代表状态y在输入x的情况下，会跳转到哪个状态。（－1表示不切换）:</li>
+</ul>
+<p><img src="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-input.png" alt="state" width="300px"></p>
+<ul>
+<li>记录状态切换之后的action的表，简称为atction_table。表中的一项（x，y）表示从状态y切换到状态x需要调用的函数，表里存的是函数指针:</li>
+</ul>
+<p><img src="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-state.png" alt="action" width="300px"></p>
+<p>于是代码便可以写成这样：</p>
+<pre><code>newState = state_table[state][input]
+action_table[state][newState]
+state = newState
+</code></pre><p>值得一提的是，很多时候输入并不能简单的量化，如在编写界面的时候，用户的各种操作以及其它模块的消息通知等等难以用一个维度来表示，这个时候也可以考虑在state_table存状态切换函数的指针。</p>
+<p><img src="http://7u2l8d.com1.z0.glb.clouddn.com/sm-state-function.png" alt="state" width="300px"></p>
+<p>那么代码可以写成：</p>
+<pre><code>newState = state_table[state](input)
+action_table[state][newState]
+state = newState
+</code></pre><h4>State Design Pattern</h4>
+
+<p>使用面对对象的方法来实现State Machine。简单来说：</p>
+<p>State为状态类，定义了进入这个状态和离开这个状态时会调用的函数，就是上面所说的action。Event类表示状态的切换逻辑，这个类中包含Source State和Target State。State是状态图中的圆圈，Event是其中的连接线。</p>
+<p>State Machine包含所有State和所有的Event，State Machine类设置完毕之后，外部调用只需要调用这个类的接口就可以模仿State Macine的运行了。</p>
+<p>Github上的<a href="https://github.com/blakewatters/TransitionKit" target="_blank" rel="external">TransitionKit</a>是一个很好的oc例子，偷个懒不写Sample了，可以参考它上面的。</p>
+<p>这个方法的好处是把状态的逻辑抽象出来了，可以在其他地方复用，而且想要扩张状态机相对容易，再添加State和相应的Event就可以了，而不要修改其他部分的代码。从实现方式来看这种方法的效率比前面的应该会差一点，不过这对系统的整体性能应该不会有太多影响。个人还是比较喜欢用Table Driven的方式，看起来比较直观简洁，总体代码量比较少。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/04/15/自动状态机/" data-id="cioy0t3k80004o59jvmxnw3gi" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/05/29/浅谈队列在移动开发中的应用/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          浅谈队列在移动开发中的应用
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/02/11/Wordle/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Wordle</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/04/">April 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/05/29/浅谈队列在移动开发中的应用/">浅谈队列在移动开发中的应用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/04/15/自动状态机/">自动状态机</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/11/Wordle/">Wordle</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/12/浅谈MVC/">浅谈MVC</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/开篇/">开篇</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Quan Xiaosha<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>浅谈队列在移动开发中的应用 | Quan&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="恰当的数据结构，能让代码产生质的飞跃。本篇总结下在开发中对‘队列’的一点体会。
+有限资源的访问
+
+先进先出（FIFO）是队列的本质属性，所以当遇到这样的需求时，比如实现一个FIFO的cache，那么使用队列自然不需要太多思考。
+本篇主要总结下在App中使用队列来控制对‘有限的资源’的访问。
+队列在iOS框架中随处可见，比如主线程的runloop会把所有等待处理的Event放在队列里，GCD的ser">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈队列在移动开发中的应用">
+<meta property="og:url" content="http://yoursite.com/2016/05/29/浅谈队列在移动开发中的应用/index.html">
+<meta property="og:site_name" content="Quan's Blog">
+<meta property="og:description" content="恰当的数据结构，能让代码产生质的飞跃。本篇总结下在开发中对‘队列’的一点体会。
+有限资源的访问
+
+先进先出（FIFO）是队列的本质属性，所以当遇到这样的需求时，比如实现一个FIFO的cache，那么使用队列自然不需要太多思考。
+本篇主要总结下在App中使用队列来控制对‘有限的资源’的访问。
+队列在iOS框架中随处可见，比如主线程的runloop会把所有等待处理的Event放在队列里，GCD的ser">
+<meta property="og:updated_time" content="2016-06-02T08:02:55.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅谈队列在移动开发中的应用">
+<meta name="twitter:description" content="恰当的数据结构，能让代码产生质的飞跃。本篇总结下在开发中对‘队列’的一点体会。
+有限资源的访问
+
+先进先出（FIFO）是队列的本质属性，所以当遇到这样的需求时，比如实现一个FIFO的cache，那么使用队列自然不需要太多思考。
+本篇主要总结下在App中使用队列来控制对‘有限的资源’的访问。
+队列在iOS框架中随处可见，比如主线程的runloop会把所有等待处理的Event放在队列里，GCD的ser">
+  
+    <link rel="alternate" href="/atom.xml" title="Quan&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Quan&#39;s Blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-浅谈队列在移动开发中的应用" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/05/29/浅谈队列在移动开发中的应用/" class="article-date">
+  <time datetime="2016-05-29T07:16:57.000Z" itemprop="datePublished">2016-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浅谈队列在移动开发中的应用
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>恰当的数据结构，能让代码产生质的飞跃。本篇总结下在开发中对<b>‘队列’</b>的一点体会。</p>
+<h4>有限资源的访问</h4>
+
+<p>先进先出（FIFO）是队列的本质属性，所以当遇到这样的需求时，比如实现一个FIFO的cache，那么使用队列自然不需要太多思考。</p>
+<p>本篇主要总结下在App中使用队列来控制对‘有限的资源’的访问。</p>
+<p>队列在iOS框架中随处可见，比如主线程的runloop会把所有等待处理的Event放在队列里，GCD的serial queue本身就是一个队列，还有NSOperationQueue等。这些例子中有一个共同的模式，就是对一个有限资源的使用，runloop是资源，线程是资源。</p>
+<p>而在多线程编程中，我们常常使用锁来控制对资源的访问。从某种角度来看，锁也是操作系统提供的存放访问线程的队列。如果让我来实现一个锁的话，我也会使用队列来存放等待线程的信息。</p>
+<p>道理很简单，更多的时候需要思考的是：什么是有限的资源，什么是资源的访问者。</p>
+<p>举一个例子：在iOS中，弹窗（alert view）最多只能显示一个，比如定位城市更新、订单状态改变等。于是我们使用了队列来控制对弹窗的使用(swift伪代码，省略了一些细节)：</p>
+<pre><code>public class WindowManager {
+    private var _queue: Queue<(string, string)="">
+    private var isShowing: Bool
+
+    public func show(title: String, message: String) {
+        onMainQueue {
+            if isShowing {
+                _queue.enqueue((title, message))
+            } else {
+                showInternal(title, message)
+            }
+        }
+    }
+
+    public func dismiss() {
+        onMainQueue {
+            dismissInternal()
+            // schedule pending windows
+            if _queue is not empty {
+                let (title, message) = _queue.dequeue()
+                showInternal(title, message)
+            }
+        }
+    }
+
+    private func showInternal(title: String, message: String) {
+        isShowing = true
+        showAlertView()
+    }
+
+    private func dismissInternal() {
+        isShowing = false
+        dismissAlertView()
+    }
+
+    // execute block on main queue
+    private func onMainQueue(block: () -> Void) {
+        if NSThread.isMainThread() {
+            block()
+        } else {
+            dispatch_async(dispatch_get_main_queue(), block)
+        }
+    }
+}
+</(string,></code></pre>
+
+<p>后来需求变复杂了些，比如当前在登录界面时，弹窗需要等登录界面退出再显示。<br><a id="more"></a><br>比较差的解决方案:<br>1. 在要弹出alert view的时候先检查当前是不是在登录界面，是的话就把参数进队列;<br>  2. 在登录界面消失的时候，再去检查弹窗系统的队列。<br>这种方法耦合了弹窗系统和登录界面，可维护性和可扩展性比较差。</p>
+<p>我们把弹窗的概念扩展了一下：登录界面下不能显示弹窗，其实是登录界面占用了窗口资源，因此它也可以看做是一种弹窗。于是我们用闭包替换具体弹窗的显示和消失，代码更新成如下（伪代码，省略一些细节）：</p>
+<pre><code>public class WindowManager {
+    private var _queue: Queue< (() -> Void, () -> Void) >        // (showBlock, dismissBlock)
+    private var activeDismissBlock: ( () -> Void )?
+
+    public func show(showBlock: () -> Void, dismissBlock: () -> Void) {
+        onMainQueue {
+            if activeDismissBlock != nil {        
+                <font color="green">// some window already show</font>
+                _queue.enqueue( (showBlock, dismissBlock) )
+            } else {
+                showInternal(showBlock, dismissBlock)
+            }
+        }
+    }
+
+    public func dismiss() {
+        onMainQueue {
+            dismissInternal()
+            <font color="green">// schedule pending windows</font>
+            if _queue is not empty {
+                let (showBlock, dismissBlock) = _queue.dequeue()
+                showInternal(showBlock, dismissBlock)
+            }
+        }
+    }
+
+    private func showInternal(showBlock: () -> Void, dismissBlock: () -> Void) {
+        showBlock()
+        activeDismissBlock = dismissBlock
+    }
+
+    private func dismissInternal() {
+        activeDismissBlock?()
+        activeDismissBlock = nil
+    }
+
+    <font color="green">// execute block on main queue</font>
+    private func onMainQueue(block: () -> Void) {
+        if NSThread.isMainThread() {
+            block()
+        } else {
+            dispatch_async(dispatch_get_main_queue(), block)
+        }
+    }
+}
+</code></pre>
+
+<p>事实证明这种抽象是有十分有效的，后来添加更多种类的弹窗，比如广告页面、新手引导页面等，可以无缝接入。</p>
+<h4>资源访问的优化</h4>
+
+<p>使用队列可以优化对资源的使用，在调度下一个使用请求时，可以检查在队列中等待的请求，删掉一些不必要的操作。一个比较明显的例子就是用户在某个极端的时间内连续触发了‘赞’和‘取消赞’的操作，那么相邻的‘赞’和‘取消赞’就可以互相抵消。</p>
+<p>另外一种情况是由于各种原因，会有很多重复的请求，比如不同的业务模块短时间内都发送了更新某个缓存的请求，通过队列我们可以把重复的请求去掉。</p>
+<h4>资源池</h4>
+
+<p>将‘资源’抽象成一个接口，那么只要‘资源池’实现了这个接口，也可以被看成是一个资源。</p>
+<h4>Generalize</h4>
+
+<p>我门可以设计几个接口，泛化这个模式，把与具体业务相关的逻辑剥离出去。 定义资源的接口如下：</p>
+<pre><code>public protocol Resource {    
+    <font color="green">// whether resource is available</font>
+    var available: Bool { get }
+
+    <font color="green">// call this observer block when available value change</font>
+    var availableObserver: ( () -> Void )? { get set }
+
+    <font color="green">// add visitor</font>
+    func addVisitor(visitor: Visitor)
+
+    <font color="green">// remove visitor</font>
+    func removeVisitor(visitor: Visitor)
+}
+</code></pre>
+
+<p>定义资源使用者接口:</p>
+<pre><code>public protocol Visitor {
+    <font color="green">// access resource. call completion when access finished</font>
+    func access(resource: Resource, completion: () -> Void )
+
+    <font color="green">// whether is duplicate to another visitor</font>
+    func isDuplicate(anotherVisitor: Visitor) -> Bool
+
+    <font color="green">// whether is opposite to another visitor</font>
+    func isOpposite(anotherVisitor: Visitor) -> Bool
+}
+</code></pre>
+
+<p>使用者队列:</p>
+<pre><code>public class VisitorQueue<t: visitor=""> {
+
+    private var _queue: Queue<t>
+    private var _resource: Resource
+
+    public init(resource: Resource) {
+        _queue = Queue<t>()
+        _resource = resource
+        <font color="green">// set schedule as resource's available observer</font>
+        _resource.availableObserver = { [weak self] in
+            self?.schedule()
+        }
+    }
+
+   public func enqueue(visitor: T) {
+        if _resource.available {
+            grantAccess(visitor)
+        } else {
+            _queue.enqueue(visitor)
+        }
+    }
+
+    private func schedule() {
+        while _resource.available && !_queue.isEmpty() {
+            let visitor = _queue.front()!
+            _queue.dequeue()
+
+            <font color="green">// do optimizations</font>
+            if let nextVisitor = _queue.front() {
+
+                <font color="green">// remove duplicate</font>
+                if visitor.isDuplicate(nextVisitor) {
+                    continue
+                }
+
+                <font color="green">// remove together with opposite</font>
+                if visitor.isOpposite(nextVisitor) {
+                    _queue.dequeue()
+                    continue
+                }
+            }
+            grantAccess(visitor)
+        }
+    }
+
+    private func grantAccess(visitor: Visitor) {
+        _resource.addVisitor(visitor)
+        visitor.access(_resource) {
+            self._resource.removeVisitor(visitor)
+        }
+    }
+}
+</t></t></t:></code></pre>
+
+<h4>总结</h4>
+
+<p>计算机界有句名言: “All problems in computer science can be solved by another level of indirection”，翻译成中文就是：所有的计算机问题都可以通过添加另一层抽象来解决。上面的例子中，我们通过一步步的抽象，把只能解决一个具体问题的方法，逐步应用到更广的问题。这就是‘抽象’的魅力，它让代码变的简洁，变的可以复用，降低维护的难度，减少宝贵的时间成本，让程序员的生活变的更幸福！=v=</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/05/29/浅谈队列在移动开发中的应用/" data-id="cioy0t3k50002o59jn90utkzw" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/04/15/自动状态机/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">自动状态机</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/04/">April 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/05/29/浅谈队列在移动开发中的应用/">浅谈队列在移动开发中的应用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/04/15/自动状态机/">自动状态机</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/11/Wordle/">Wordle</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/12/浅谈MVC/">浅谈MVC</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/开篇/">开篇</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Quan Xiaosha<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

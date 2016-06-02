@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Wordle | Quan&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="记录下自己业余时间在做的一个小项目，这个项目的名字叫PageWordle，可以将网络页面上的文本信息用词云的可视化形式展现，出现频率高的词语将以更大的字体展现，其主要用意是让我们在阅读文章之前可以知道这边文章中的主要概念，再决定要不要继续阅读。
+
+主要流程包括：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Wordle">
+<meta property="og:url" content="http://yoursite.com/2015/02/11/Wordle/index.html">
+<meta property="og:site_name" content="Quan's Blog">
+<meta property="og:description" content="记录下自己业余时间在做的一个小项目，这个项目的名字叫PageWordle，可以将网络页面上的文本信息用词云的可视化形式展现，出现频率高的词语将以更大的字体展现，其主要用意是让我们在阅读文章之前可以知道这边文章中的主要概念，再决定要不要继续阅读。
+
+主要流程包括：">
+<meta property="og:image" content="http://7u2l8d.com1.z0.glb.clouddn.com/demo.png">
+<meta property="og:updated_time" content="2016-05-29T06:51:57.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Wordle">
+<meta name="twitter:description" content="记录下自己业余时间在做的一个小项目，这个项目的名字叫PageWordle，可以将网络页面上的文本信息用词云的可视化形式展现，出现频率高的词语将以更大的字体展现，其主要用意是让我们在阅读文章之前可以知道这边文章中的主要概念，再决定要不要继续阅读。
+
+主要流程包括：">
+<meta name="twitter:image" content="http://7u2l8d.com1.z0.glb.clouddn.com/demo.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Quan&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Quan&#39;s Blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Wordle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/02/11/Wordle/" class="article-date">
+  <time datetime="2015-02-11T15:52:28.000Z" itemprop="datePublished">2015-02-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Wordle
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>记录下自己业余时间在做的一个小项目，这个项目的名字叫PageWordle，可以将网络页面上的文本信息用词云的可视化形式展现，出现频率高的词语将以更大的字体展现，其主要用意是让我们在阅读文章之前可以知道这边文章中的主要概念，再决定要不要继续阅读。</p>
+<p><img src="http://7u2l8d.com1.z0.glb.clouddn.com/demo.png" alt="demo" width="400px"></p>
+<p>主要流程包括：</p>
+<a id="more"></a>
+<ol>
+<li><p>获取网页的html内容，使用XPathQuery获取感兴趣的内容，通常是element ‘p’之内的文本。</p>
+</li>
+<li><p>获取之后的内容做词法分析。目前使用的是Cocoa中的NSLinguisticTagger类，它支持英文和中文的分词，并且可以分析英文单词的词性。不过遗憾的是目前暂时不能分析中文词性。</p>
+</li>
+<li><p>筛选词语。对英文只选取其中的名词，对于中文，因为目前还不能分析词性，只能做一些简单的处理，如手动定义一个dictionary，把里面的dictionary里面的词语过滤掉。对于英文单词，因为它有很多的形态，还需要将其转化成原始的形式，这也可以通过NSLinguisticTagger完成。</p>
+</li>
+<li><p>根据词语的出现次数，使用不同大小的字体来绘制词语。这个项目的可视化想法来源于<a href="http://www.wordle.net/gallery" target="_blank" rel="external">http://www.wordle.net/gallery</a>。其主要特点是一个单词并不是被看成一个矩形，我们可以在字体比较大的单词内部空白处填入字体比较小的单词。项目中使用了二叉空间分割树来解决这个问题。对于要新插入的单词，首先生成图片并获得图片的位图数据，通过二叉空间分割树可以比较快速的判断该位图能不能在特定的位置插入。具体实现可以参考源代码。</p>
+</li>
+<li><p>Increamental的显示单词，处理完一个之后会马上显示，而不是等所有的都处理完再一起显示。项目中使用Facebook的AsyncDisplayKit库，不过这有点牛刀小试的意思，因为这里的界面展示其实很简单，也没有什么用户的交互。后续的完善中希望可以派上用场。</p>
+</li>
+</ol>
+<p>项目的源代码放在<a href="https://github.com/shiyizju/PageWordle.git" target="_blank" rel="external">https://github.com/shiyizju/PageWordle.git</a>。目前考虑继续添加的功能有一下几点：</p>
+<ol>
+<li>网页抓取功能的提升，可以抓取整个网站的页面而不是单个页面。</li>
+<li>中文词法分析的优化，希望NSLinguisticTagger可以继续提升对中文的支持，不然得考虑使用其它的技巧或者第三方库。</li>
+<li>添加zoom功能，但是要保证zoom过程中绘制的流畅性。</li>
+<li>丰富界面展示，比如字体颜色，文字的方向（水平或垂直），支持预定义的模版。</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/02/11/Wordle/" data-id="cioy0t3jx0000o59j9477zcq6" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/04/15/自动状态机/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          自动状态机
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/01/12/浅谈MVC/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">浅谈MVC</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/04/">April 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/05/29/浅谈队列在移动开发中的应用/">浅谈队列在移动开发中的应用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/04/15/自动状态机/">自动状态机</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/11/Wordle/">Wordle</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/12/浅谈MVC/">浅谈MVC</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/开篇/">开篇</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Quan Xiaosha<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
